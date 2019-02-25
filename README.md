@@ -23,8 +23,8 @@ In `server.js`:
 	// Express
 	const server = require('express')()
 
-  // Postgres (pg)
-  const pool = new Pool({ connectionString: '...' })
+	// Postgres (pg)
+	const pool = new Pool({ connectionString: '...' })
 
 	require('routes/kittens.js')(server, pool)
 
