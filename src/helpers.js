@@ -3,7 +3,7 @@ module.exports.applyToAll = (func, objectOrArray) => objectOrArray.constructor =
 
 // applyToAllAsync(promiseFunction, obj1) or applyToAllAsync(promiseFunction, [obj1, obj2, ...])
 module.exports.applyToAllAsync = async (promiseFunction, objectOrArray) => new Promise(async (resolve, reject) => {
-  const objects = objectOrArray.constructor === Array ? objectOrArray : [objectOrArray]
+  const objects = Array.isArray(objectOrArray) ? objectOrArray : [objectOrArray]
   let errors, values
   for (let i = 0; i < objects.length; i++) {
     try {
@@ -14,7 +14,7 @@ module.exports.applyToAllAsync = async (promiseFunction, objectOrArray) => new P
       errors.push(err)
     }
   }
-  resolve({ errors, values })
+  resolve(Array.isArray(objectOrArray) ? { errors, values } : { errors: errors[0], values: values[0] })
 })
 
 module.exports.nullAllEmptyFields = obj => {
