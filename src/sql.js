@@ -59,22 +59,25 @@ const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undef
   const fieldCounters = Object.keys(newValues).map((fieldName, index) => `$${index + 1}`).join(', ')
   nullAllEmptyFields(newValues)
   const insertQuery = {
-    text: `INSERT INTO ${tableName}(${fieldNames}) VALUES(${fieldCounters});`,
+    text: `INSERT INTO ${tableName}(${fieldNames}) VALUES(${fieldCounters})${options.findRowByField ? ` RETURNING ${options.findRowByField}` : ''};`,
     values: Object.values(newValues)
   }
-  let insertResults
   try {
-    insertResults = await pool.query(insertQuery)
+    // Create a new row
+    const insertResults = await pool.query(insertQuery)
+    if (options.findRowByField) {
+      // Find the newly created row
+      const newRowId = insertResults.rows[0][options.findRowByField]
+      const searchQuery = `SELECT * FROM ${tableName} WHERE ${options.findRowByField}=($1);`
+      const { rows } = await pool.query(searchQuery, [newRowId])
+      // Add id to row
+      const completeRow = Object.assign({}, rows[0], insertResults.rows[0])
+      resolve(completeRow)
+    } else {
+      resolve(insertResults)
+    }
   } catch (err) {
     reject(err)
-  }
-  if (options.findRowByField) {
-    // Find the newly created row
-    const searchQuery = `SELECT * FROM ${tableName} WHERE ${options.findRowByField}=($1);`
-    const { rows } = await pool.query(searchQuery, [newValues[options.findRowByField]])
-    resolve(rows[0])
-  } else {
-    resolve(insertResults)
   }
 })
 
