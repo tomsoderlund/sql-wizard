@@ -18,8 +18,28 @@ Library that helps generate SQL queries and Express REST routes.
 
 ## Creating REST routes with Express
 
+In `server.js`:
+
+	// Express
+	const server = require('express')()
+
+  // Postgres (pg)
+  const pool = new Pool({ connectionString: '...' })
+
+	require('routes/kittens.js')(server, pool)
+
+In e.g. `routes/kittens.js`:
+
 	const { routes: { createSqlRestRoutes } } = require('sql-wizard')
 
 	module.exports = (server, pool) => {
 	  createSqlRestRoutes(server, pool, '/api/kittens', 'kitten', { /* place custom REST handlers here */ })
 	}
+
+### Custom REST handlers
+
+* `list`, `beforeList`, `afterList`
+* `get`, `beforeGet`, `afterGet`
+* `create`, `beforeCreate`, `afterCreate`
+* `update`, `beforeUpdate`, `afterUpdate`
+* `delete`, `beforeDelete`, `afterDelete`
