@@ -14,7 +14,7 @@ module.exports.applyToAllAsync = async (promiseFunction, objectOrArray) => new P
       errors.push(err)
     }
   }
-  resolve(Array.isArray(objectOrArray) ? { errors, values } : { errors: errors[0], values: values[0] })
+  resolve(Array.isArray(objectOrArray) ? { errors, values } : { errors: errors && errors[0], values: values && values[0] })
 })
 
 module.exports.nullAllEmptyFields = obj => {
