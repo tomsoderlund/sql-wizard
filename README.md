@@ -6,12 +6,24 @@ Library that helps generate SQL queries and Express REST routes.
 
 	const { sql: { sqlFind, sqlCreate, sqlFindOrCreate, sqlUpdate, sqlDelete, sqlPopulate } } = require('sql-wizard')
 
-	const [person] = await sqlFind(pool, 'person', { id: person.id })
-	const person = await sqlFindOrCreate(pool, 'person', { id: person.id }, { person values... })
+### Find/search
 
+	const people = await sqlFind(pool, 'person', { id: person.id })
+
+### (Find or) Create
+
+	const person = await sqlFindOrCreate(pool, 'person', { id: person.id }, { person values... })
 	const person = await sqlCreate(pool, 'person', { person values... })
+
+### Update
+
 	const { rowCount } = await sqlUpdate(pool, 'person', { id: person.id }, { person values... })
+
+### Delete
+
 	await sqlDelete(pool, 'person', { id: person.id })
+
+### Populate (add related data)
 
 	await sqlPopulate(pool, company, 'people', 'company', 'person') --> company.people = [person1, person2...]
 
