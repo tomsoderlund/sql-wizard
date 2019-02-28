@@ -39,11 +39,16 @@ const queryObjectToOrderClause = (queryObject, defaultValue = 'name') => (queryO
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
 const sqlFind = async (pool, tableName, query, options = { fuzzySearch: false }) => {
-  const queryField = Object.keys(query)[0]
-  const queryValue = options.fuzzySearch ? `${Object.values(query)[0]}%` : Object.values(query)[0]
-  const queryOperator = options.fuzzySearch ? 'ILIKE' : '='
-  const sqlString = `SELECT * FROM ${tableName} WHERE ${queryField} ${queryOperator} ($1);`
-  const { rows } = await pool.query(sqlString, [queryValue])
+  let whereClause = ''
+  let queryValue
+  if (query) {
+    const queryField = Object.keys(query)[0]
+    queryValue = options.fuzzySearch ? `${Object.values(query)[0]}%` : Object.values(query)[0]
+    const queryOperator = options.fuzzySearch ? 'ILIKE' : '='
+    whereClause = ` WHERE ${queryField} ${queryOperator} ($1)`
+  }
+  const sqlString = `SELECT * FROM ${tableName}${whereClause};`
+  const { rows } = await pool.query(sqlString, query ? [queryValue] : undefined)
   return rows
 }
 
