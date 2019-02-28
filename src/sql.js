@@ -10,7 +10,7 @@ const { nullAllEmptyFields } = require('./helpers')
 
 // ----- Helpers -----
 
-const queryObjectToWhereClause = queryObject => Object.keys(queryObject).reduce(
+const queryObjectToWhereClause = (queryObject, options = { fuzzySearch: false }) => Object.keys(queryObject).reduce(
   (result, key) => {
     // Special keys
     if (['limit', 'sort', 'any'].includes(key)) return result
@@ -24,7 +24,7 @@ const queryObjectToWhereClause = queryObject => Object.keys(queryObject).reduce(
           ? { operator: ' IS ', value: 'NULL' }
           : value.toLowerCase() === '!null'
             ? { operator: ' IS NOT ', value: 'NULL' }
-            : { operator: ' ILIKE ', value: `'${value}%'` }
+            : { operator: ' ILIKE ', value: `'${value}${options.fuzzySearch ? '%' : ''}'` }
       : { operator: '=', value }
     return result + (value !== undefined && value !== ''
       ? (result.length ? combiner : 'WHERE ') + key + opValue.operator + opValue.value
@@ -38,17 +38,10 @@ const queryObjectToOrderClause = (queryObject, defaultValue = 'name') => (queryO
 // ----- SQL functions -----
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
-const sqlFind = async (pool, tableName, query, options = { fuzzySearch: false }) => {
-  let whereClause = ''
-  let queryValue
-  if (query) {
-    const queryField = Object.keys(query)[0]
-    queryValue = options.fuzzySearch ? `${Object.values(query)[0]}%` : Object.values(query)[0]
-    const queryOperator = options.fuzzySearch ? 'ILIKE' : '='
-    whereClause = ` WHERE ${queryField} ${queryOperator} ($1)`
-  }
-  const sqlString = `SELECT * FROM ${tableName}${whereClause};`
-  const { rows } = await pool.query(sqlString, query ? [queryValue] : undefined)
+const sqlFind = async (pool, tableName, query, options) => {
+  let whereClause = query ? queryObjectToWhereClause(query) : ''
+  const sqlString = `SELECT * FROM ${tableName} ${whereClause};`
+  const { rows } = await pool.query(sqlString)
   return rows
 }
 
