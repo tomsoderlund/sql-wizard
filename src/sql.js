@@ -105,7 +105,7 @@ const sqlDelete = async (pool, tableName, query) => {
 
 // await sqlPopulate(pool, company, 'people', 'company', 'person') --> company.people = [person1, person2...]
 // NOTE: assumes existence of a table 'parentTableName_childTableName'
-const sqlPopulate = async (pool, object, key, parentTableName, childTableName, options = { reverse: false, extraFields: [] }) => {
+const sqlPopulate = async (pool, object, key, parentTableName, childTableName, options = { sort: undefined, reverse: false, extraFields: [] }) => {
   const dataTable = options.reverse ? parentTableName : childTableName
   const sourceTable = options.reverse ? childTableName : parentTableName
   const sqlString = `SELECT DISTINCT ON (${dataTable})
@@ -114,7 +114,8 @@ FROM ${childTableName}
 LEFT JOIN ${parentTableName}_${childTableName} ON (${childTableName}.id = ${parentTableName}_${childTableName}.${childTableName}_id)
 LEFT JOIN ${parentTableName} ON (${parentTableName}.id = ${parentTableName}_id)
 WHERE ${sourceTable}.id = ${object.id}
-AND ${dataTable}.id IS NOT NULL;`
+AND ${dataTable}.id IS NOT NULL
+${options.sort ? `ORDER BY ${options.sort}` : ''};`
   const { rows } = await pool.query(sqlString)
   object[key] = rows
 }
