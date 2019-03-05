@@ -50,8 +50,8 @@ In e.g. `routes/kittens.js`:
 
 ### Custom REST handlers
 
-* `list`, `beforeList`, `afterList`
-* `get`, `beforeGet`, `afterGet`
-* `create`, `beforeCreate`, `afterCreate`
-* `update`, `beforeUpdate`, `afterUpdate`
-* `delete`, `beforeDelete`, `afterDelete`
+* `list(pool, tableName, options, customHandlers, req)`, `beforeList(pool, req.body)`, `afterList(pool, result)`, `listFilter(req)`, `listSort(req)`
+* `get(pool, tableName, options, customHandlers, req)`, `beforeGet(pool, req.body)`, `afterGet(pool, result)`
+* `create(pool, tableName, options, customHandlers, req)`, `beforeCreate(pool, req.body)`, `afterCreate(pool, result)`
+* `update(pool, tableName, options, customHandlers, req)`, `beforeUpdate(pool, req.body)`, `afterUpdate(pool, result)`
+* `delete(pool, tableName, options, customHandlers, req)`, `beforeDelete(pool, req.body)`, `afterDelete(pool, result)`

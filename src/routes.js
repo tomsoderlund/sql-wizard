@@ -1,4 +1,4 @@
-const { applyToAllAsync } = require('./helpers')
+const { applyToAllAsync, titleCase } = require('./helpers')
 const { sqlFind, sqlCreate, sqlUpdate, sqlDelete } = require('./sql')
 
 // Set up CRUD routes: createSqlRestRoutes(server, pool, '/api/items', 'item', { create: (pool, tableName, options, customHandlers, req) => {} }, options)
@@ -13,9 +13,9 @@ module.exports.createSqlRestRoutes = function (server, pool, rootRoute, tableNam
 
   const get = async function (pool, tableName, options, customHandlers, req) {
     const rows = await sqlFind(pool, tableName, req.params)
-    if (!rows[0]) { throw new Error('Not found') }
-    if (customHandlers.afterGet) rows[0] = await customHandlers.afterGet(pool, rows[0])
-    return rows[0]
+    const result = rows[0]
+    if (!result) { throw new Error('Not found') }
+    return result
   }
 
   const create = async function (pool, tableName, options, customHandlers, req) {
@@ -32,7 +32,6 @@ module.exports.createSqlRestRoutes = function (server, pool, rootRoute, tableNam
   }
 
   const update = async function (pool, tableName, options, customHandlers, req) {
-    if (customHandlers.beforeUpdate) req.body = await customHandlers.beforeUpdate(pool, req.body)
     const query = { id: parseInt(req.params.id) }
     await sqlUpdate(pool, tableName, query, req.body)
     return req.body
@@ -44,9 +43,16 @@ module.exports.createSqlRestRoutes = function (server, pool, rootRoute, tableNam
     return query
   }
 
-  const processAndRespond = async (pool, tableName, options, customHandlers, handlerFunction, req, res, next) => {
+  const processAndRespond = async (pool, tableName, options, customHandlers, actionName, handlerFunction, req, res, next) => {
     try {
-      const results = await handlerFunction(pool, tableName, options, customHandlers, req)
+      const beforeActionName = `before${titleCase(actionName)}`
+      if (customHandlers[beforeActionName] && beforeActionName !== 'beforeCreate') req.body = await customHandlers[beforeActionName](pool, req.body)
+
+      let results = await handlerFunction(pool, tableName, options, customHandlers, req)
+
+      const afterActionName = `after${titleCase(actionName)}`
+      if (customHandlers[afterActionName]) results = await customHandlers[afterActionName](pool, results)
+
       res.json(results)
     } catch (err) {
       console.error('SQL:', err)
@@ -56,9 +62,9 @@ module.exports.createSqlRestRoutes = function (server, pool, rootRoute, tableNam
   }
 
   // Set up routes
-  server.get(`${rootRoute}`, processAndRespond.bind(this, pool, tableName, options, customHandlers, customHandlers.list || list))
-  server.get(`${rootRoute}/:id`, processAndRespond.bind(this, pool, tableName, options, customHandlers, customHandlers.get || get))
-  server.post(`${rootRoute}`, processAndRespond.bind(this, pool, tableName, options, customHandlers, customHandlers.create || create))
-  server.put(`${rootRoute}/:id`, processAndRespond.bind(this, pool, tableName, options, customHandlers, customHandlers.update || update))
-  server.delete(`${rootRoute}/:id`, processAndRespond.bind(this, pool, tableName, options, customHandlers, customHandlers.delete || deleteRow))
+  server.get(`${rootRoute}`, processAndRespond.bind(this, pool, tableName, options, customHandlers, 'list', customHandlers.list || list))
+  server.get(`${rootRoute}/:id`, processAndRespond.bind(this, pool, tableName, options, customHandlers, 'get', customHandlers.get || get))
+  server.post(`${rootRoute}`, processAndRespond.bind(this, pool, tableName, options, customHandlers, 'create', customHandlers.create || create))
+  server.put(`${rootRoute}/:id`, processAndRespond.bind(this, pool, tableName, options, customHandlers, 'update', customHandlers.update || update))
+  server.delete(`${rootRoute}/:id`, processAndRespond.bind(this, pool, tableName, options, customHandlers, 'delete', customHandlers.delete || deleteRow))
 }

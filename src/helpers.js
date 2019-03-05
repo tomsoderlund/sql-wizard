@@ -22,3 +22,5 @@ module.exports.nullAllEmptyFields = obj => {
     if (obj[key] === '') obj[key] = null
   }
 }
+
+module.exports.titleCase = str => str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
