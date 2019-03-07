@@ -22,12 +22,13 @@ module.exports.createSqlRestRoutes = function (server, pool, rootRoute, tableNam
     const createOne = rowData => new Promise(async (resolve, reject) => {
       try {
         if (customHandlers.beforeCreate) rowData = await customHandlers.beforeCreate(pool, rowData)
-        resolve(await sqlCreate(pool, tableName, rowData, { findRowByField: 'name' }))
+        resolve(await sqlCreate(pool, tableName, rowData, { findRowByField: options.findRowByField || 'id' }))
       } catch (err) {
         reject(err)
       }
     })
     const results = await applyToAllAsync(createOne, req.body)
+    if (results.errors) throw new Error(results.errors)
     return results.values
   }
 

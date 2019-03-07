@@ -1,6 +1,6 @@
 {
   "name": "sql-wizard",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Library that helps generate SQL queries and Express CRUD routes.",
   "author": "Tom Söderlund <tom@tomsoderlund.com>",
   "keywords": [
