@@ -24,4 +24,20 @@ describe('sql.js', function () {
       `WHERE name ILIKE 'Tom%' OR email ILIKE 'Tom%'`
     )
   })
+
+  it('should queryObjectToWhereClause with contains', async function () {
+    expect(
+      queryObjectToWhereClause({ contains: true, name: 'Tom' })
+    ).toEqual(
+      `WHERE name ILIKE '%Tom%'`
+    )
+  })
+
+  it('should queryObjectToWhereClause with date larger than', async function () {
+    expect(
+      queryObjectToWhereClause({ start_date: '>2019-01-01' })
+    ).toEqual(
+      `WHERE start_date > '2019-01-01'`
+    )
+  })
 })

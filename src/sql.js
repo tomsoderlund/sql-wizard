@@ -10,25 +10,31 @@ const { nullAllEmptyFields } = require('./helpers')
 
 // ----- Helpers -----
 
-const queryObjectToWhereClause = (queryObject, options = { startsWith: false }) => Object.keys(queryObject).reduce(
+const wrapIfString = value => isNaN(value) ? `'${value}'` : value
+
+const queryObjectToWhereClause = (queryObject, options = { startsWith: false, endsWith: false, contains: false }) => Object.keys(queryObject).reduce(
   (result, key) => {
     // Special keys
-    if (['limit', 'sort', 'any', 'startsWith'].includes(key)) return result
+    if (['limit', 'sort', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
+    // Options
+    const copyOptions = ['startsWith', 'endsWith', 'contains']
+    for (let o in copyOptions) {
+      if (queryObject[copyOptions[o]]) options[copyOptions[o]] = true
+    }
     // Normal value
     const value = queryObject[key]
     const combiner = queryObject.any ? ' OR ' : ' AND '
-    if (queryObject.startsWith) options.startsWith = true
-    const opValue = isNaN(value)
+    const operatorAndValue = isNaN(value)
       ? (value[0] === '<' || value[0] === '>') // e.g. { age: '<42' }
-        ? { operator: value[0], value: value.slice(1) }
+        ? { operator: ` ${value[0]} `, value: wrapIfString(value.slice(1)) }
         : value.toLowerCase() === 'null' // e.g. { age: 'null' }
           ? { operator: ' IS ', value: 'NULL' }
           : value.toLowerCase() === '!null' // e.g. { age: '!null' }
             ? { operator: ' IS NOT ', value: 'NULL' }
-            : { operator: ' ILIKE ', value: `'${value}${options.startsWith ? '%' : ''}'` } // e.g. { name: 'Tom' }
+            : { operator: ' ILIKE ', value: `'${options.endsWith || options.contains ? '%' : ''}${value}${options.startsWith || options.contains ? '%' : ''}'` } // e.g. { name: 'Tom' }
       : { operator: '=', value } // is a number, e.g. { age: 42 }
     return result + (value !== undefined && value !== ''
-      ? (result.length ? combiner : 'WHERE ') + key + opValue.operator + opValue.value
+      ? (result.length ? combiner : 'WHERE ') + key + operatorAndValue.operator + operatorAndValue.value
       : '')
   },
   ''
