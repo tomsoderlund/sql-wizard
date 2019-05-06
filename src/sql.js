@@ -46,7 +46,7 @@ const queryObjectToOrderClause = (queryObject, defaultValue = 'name') => (queryO
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
 const sqlFind = async (pool, tableName, query, options) => {
-  let whereClause = query ? queryObjectToWhereClause(query) : ''
+  let whereClause = query ? queryObjectToWhereClause(query, options) : ''
   const sqlString = `SELECT * FROM ${tableName} ${whereClause};`
   const { rows } = await pool.query(sqlString)
   return rows
