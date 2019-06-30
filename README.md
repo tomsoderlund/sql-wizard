@@ -8,12 +8,12 @@ Library that helps generate SQL queries and Express REST routes.
 
 ### Find/search
 
-	const people = await sqlFind(pool, 'person', { id: person.id })
+	const people = await sqlFind(pool, 'person', { id: person.id, sort: 'name' })
 
 ### (Find or) Create
 
+	const person = await sqlCreate(pool, 'person', { person values... }, { findRowByField: 'id' })
 	const person = await sqlFindOrCreate(pool, 'person', { id: person.id }, { person values... })
-	const person = await sqlCreate(pool, 'person', { person values... })
 
 ### Update
 
