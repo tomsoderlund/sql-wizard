@@ -40,14 +40,15 @@ const queryObjectToWhereClause = (queryObject, options = { startsWith: false, en
   ''
 )
 
-const queryObjectToOrderClause = (queryObject, defaultValue = 'name') => (queryObject.sort || defaultValue) + ' NULLS LAST'
+const queryObjectToOrderClause = (queryObject, defaultValue) => `ORDER BY ${queryObject.sort || defaultValue} NULLS LAST`
 
 // ----- SQL functions -----
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
 const sqlFind = async (pool, tableName, query, options) => {
-  let whereClause = query ? queryObjectToWhereClause(query, options) : ''
-  const sqlString = `SELECT * FROM ${tableName} ${whereClause};`
+  const whereClause = query ? queryObjectToWhereClause(query, options) : ''
+  const orderClause = (query && query.sort) ? queryObjectToOrderClause(query) : ''
+  const sqlString = `SELECT * FROM ${tableName} ${whereClause} ${orderClause};`
   const { rows } = await pool.query(sqlString)
   return rows
 }
