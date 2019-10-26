@@ -23,10 +23,11 @@ const queryObjectToWhereClause = (queryObject, options = { startsWith: false, en
     }
     // Normal value
     const value = queryObject[key]
+    const valueFirstChar = value ? value[0] : undefined
     const combiner = queryObject.any ? ' OR ' : ' AND '
     const operatorAndValue = isNaN(value)
-      ? (value[0] === '<' || value[0] === '>') // e.g. { age: '<42' }
-        ? { operator: ` ${value[0]} `, value: wrapIfString(value.slice(1)) }
+      ? (valueFirstChar === '<' || valueFirstChar === '>') // e.g. { age: '<42' }
+        ? { operator: ` ${valueFirstChar} `, value: wrapIfString(value.slice(1)) }
         : value.toLowerCase() === 'null' // e.g. { age: 'null' }
           ? { operator: ' IS ', value: 'NULL' }
           : value.toLowerCase() === '!null' // e.g. { age: '!null' }
