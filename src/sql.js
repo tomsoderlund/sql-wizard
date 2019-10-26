@@ -45,16 +45,17 @@ const queryObjectToOrderClause = (queryObject, defaultValue) => `ORDER BY ${quer
 // ----- SQL functions -----
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
-const sqlFind = async (pool, tableName, query, options) => {
+const sqlFind = async (pool, tableName, query, options = {}) => {
   const whereClause = query ? queryObjectToWhereClause(query, options) : ''
   const orderClause = (query && query.sort) ? queryObjectToOrderClause(query) : ''
   const sqlString = `SELECT * FROM ${tableName} ${whereClause} ${orderClause};`
+  if (options && options.debug) console.log(sqlString)
   const { rows } = await pool.query(sqlString)
   return rows
 }
 
 // const person = await sqlFindOrCreate(pool, 'person', { id: person.id }, { person values... })
-const sqlFindOrCreate = async (pool, tableName, query, newValues, options) => {
+const sqlFindOrCreate = async (pool, tableName, query, newValues, options = {}) => {
   const existing = await sqlFind(pool, tableName, query, options)
   return existing && existing[0] ? existing[0] : sqlCreate(pool, tableName, newValues, options)
 }
@@ -68,6 +69,7 @@ const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undef
     text: `INSERT INTO ${tableName}(${fieldNames}) VALUES(${fieldCounters})${options.findRowByField ? ` RETURNING ${options.findRowByField}` : ''};`,
     values: Object.values(newValues)
   }
+  if (options && options.debug) console.log(insertQuery)
   try {
     // Create a new row
     const insertResults = await pool.query(insertQuery)
@@ -75,6 +77,7 @@ const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undef
       // Find the newly created row
       const newRowId = insertResults.rows[0][options.findRowByField]
       const searchQuery = `SELECT * FROM ${tableName} WHERE ${options.findRowByField}=($1);`
+      if (options && options.debug) console.log(searchQuery)
       const { rows } = await pool.query(searchQuery, [newRowId])
       // Add id to row
       const completeRow = Object.assign({}, rows[0], insertResults.rows[0])
@@ -88,7 +91,7 @@ const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undef
 })
 
 // const { rowCount } = await sqlUpdate(pool, 'person', { id: person.id }, { person values... })
-const sqlUpdate = async (pool, tableName, query, newValues) => {
+const sqlUpdate = async (pool, tableName, query, newValues, options = {}) => {
   const fieldDefinitions = Object.keys(newValues).map((fieldName, index) => `${fieldName} = ($${index + 2})`).join(', ')
   const queryField = Object.keys(query)[0]
   const queryValue = Object.values(query)[0]
@@ -97,15 +100,17 @@ const sqlUpdate = async (pool, tableName, query, newValues) => {
     text: `UPDATE ${tableName} SET ${fieldDefinitions} WHERE ${queryField}=($1);`,
     values: [queryValue, ...Object.values(newValues)]
   }
+  if (options && options.debug) console.log(updateQuery)
   const updateResults = await pool.query(updateQuery)
   return updateResults
 }
 
 // await sqlDelete(pool, 'person', { id: person.id })
-const sqlDelete = async (pool, tableName, query) => {
+const sqlDelete = async (pool, tableName, query, options = {}) => {
   const queryField = Object.keys(query)[0]
   const queryValue = Object.values(query)[0]
   const sqlString = `DELETE FROM ${tableName} WHERE ${queryField}=($1);`
+  if (options && options.debug) console.log(sqlString)
   await pool.query(sqlString, [queryValue])
   return query
 }
@@ -123,6 +128,7 @@ LEFT JOIN ${parentTableName} ON (${parentTableName}.id = ${parentTableName}_id)
 WHERE ${sourceTable}.id = ${object.id}
 AND ${dataTable}.id IS NOT NULL
 ${options.sort ? `ORDER BY ${options.sort}` : ''};`
+  if (options && options.debug) console.log(sqlString)
   const { rows } = await pool.query(sqlString)
   object[key] = rows
 }
