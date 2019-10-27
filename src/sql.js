@@ -67,6 +67,7 @@ const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undef
   const fieldCounters = Object.keys(newValues).map((fieldName, index) => `$${index + 1}`).join(', ')
   nullAllEmptyFields(newValues)
   const insertQuery = {
+    // findRowByField can actually be multiple comma-separated values here
     text: `INSERT INTO ${tableName}(${fieldNames}) VALUES(${fieldCounters})${options.findRowByField ? ` RETURNING ${options.findRowByField}` : ''};`,
     values: Object.values(newValues)
   }
@@ -74,7 +75,8 @@ const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undef
   try {
     // Create a new row
     const insertResults = await pool.query(insertQuery)
-    if (options.findRowByField) {
+    // Current limitation: Can only find the new row if 1 findRowByField - if multiple: process 'rows' manually.
+    if (options.findRowByField && !options.findRowByField.includes(',')) {
       // Find the newly created row
       const newRowId = insertResults.rows[0][options.findRowByField]
       const searchQuery = `SELECT * FROM ${tableName} WHERE ${options.findRowByField}=($1);`
