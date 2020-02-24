@@ -83,7 +83,7 @@ const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undef
       if (options && options.debug) console.log(searchQuery)
       const { rows } = await pool.query(searchQuery, [newRowId])
       // Add id to row
-      const completeRow = Object.assign({}, rows[0], insertResults.rows[0])
+      const completeRow = Object.assign({}, rows && rows[0], insertResults.rows && insertResults.rows[0])
       resolve(completeRow)
     } else {
       resolve(insertResults)
