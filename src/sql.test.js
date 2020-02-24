@@ -1,6 +1,6 @@
-const { queryObjectToWhereClause, sqlFind } = require('./sql')
+const { queryObjectToWhereClause, sqlFind, sqlUpdate, sqlDelete } = require('./sql')
 
-describe('sql.js', function () {
+describe('sql.js helpers', function () {
   it('should queryObjectToWhereClause with AND', async function () {
     expect(
       queryObjectToWhereClause({ name: 'Tom', email: 'Tom', limit: 1000 })
@@ -40,7 +40,9 @@ describe('sql.js', function () {
       `WHERE start_date > '2019-01-01'`
     )
   })
+})
 
+describe('sql.js', function () {
   it('should sqlFind to sort', async function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
@@ -48,6 +50,26 @@ describe('sql.js', function () {
       await sqlFind(pool, 'people', { id: 5, sort: 'name' })
     ).toEqual(
       'SELECT * FROM people WHERE id=5 ORDER BY name NULLS LAST;'
+    )
+  })
+
+  it('should sqlUpdate to update', async function () {
+    const pool = jasmine.createSpyObj('pool', ['query'])
+    pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
+    expect(
+      await sqlUpdate(pool, 'person', { id: 5 }, { name: 'Charlie' }, { debug: true })
+    ).toEqual(
+      ''
+    )
+  })
+
+  it('should sqlDelete to delete with multiple', async function () {
+    const pool = jasmine.createSpyObj('pool', ['query'])
+    pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
+    expect(
+      await sqlDelete(pool, 'people', { person_id: 5, company_id: 12 }, { debug: true })
+    ).toEqual(
+      ''
     )
   })
 })

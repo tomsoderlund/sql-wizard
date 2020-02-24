@@ -82,13 +82,12 @@ const sqlCreate = (pool, tableName, newValues, options = {}) => new Promise(asyn
 
 // const { rowCount } = await sqlUpdate(pool, 'person', { id: person.id }, { person values... })
 const sqlUpdate = async (pool, tableName, query, newValues, options = {}) => {
-  const fieldDefinitions = Object.keys(newValues).map((fieldName, index) => `${fieldName} = ($${index + 2})`).join(', ')
-  const queryField = Object.keys(query)[0]
-  const queryValue = Object.values(query)[0]
+  const fieldDefinitions = Object.keys(newValues).map((fieldName, index) => `${fieldName} = ($${index + 1})`).join(', ')
+  const whereClause = query ? queryObjectToWhereClause(query, options) : ''
   nullAllEmptyFields(newValues)
   const updateQuery = {
-    text: `UPDATE ${tableName} SET ${fieldDefinitions} WHERE ${queryField}=($1);`,
-    values: [queryValue, ...Object.values(newValues)]
+    text: `UPDATE ${tableName} SET ${fieldDefinitions} ${whereClause};`,
+    values: [...Object.values(newValues)]
   }
   if (options && options.debug) console.log(updateQuery)
   const updateResults = await pool.query(updateQuery)
@@ -97,11 +96,10 @@ const sqlUpdate = async (pool, tableName, query, newValues, options = {}) => {
 
 // await sqlDelete(pool, 'person', { id: person.id })
 const sqlDelete = async (pool, tableName, query, options = {}) => {
-  const queryField = Object.keys(query)[0]
-  const queryValue = Object.values(query)[0]
-  const sqlString = `DELETE FROM ${tableName} WHERE ${queryField}=($1);`
+  const whereClause = query ? queryObjectToWhereClause(query, options) : ''
+  const sqlString = `DELETE FROM ${tableName} ${whereClause};`
   if (options && options.debug) console.log(sqlString)
-  await pool.query(sqlString, [queryValue])
+  await pool.query(sqlString)
   return query
 }
 
