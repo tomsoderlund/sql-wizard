@@ -62,32 +62,19 @@ const sqlFindOrCreate = async (pool, tableName, query, newValues, options = {}) 
 }
 
 // const person = await sqlCreate(pool, 'person', { person values... })
-const sqlCreate = (pool, tableName, newValues, options = { findRowByField: undefined }) => new Promise(async (resolve, reject) => {
+const sqlCreate = (pool, tableName, newValues, options = {}) => new Promise(async (resolve, reject) => {
   const fieldNames = Object.keys(newValues).join(', ')
   const fieldCounters = Object.keys(newValues).map((fieldName, index) => `$${index + 1}`).join(', ')
   nullAllEmptyFields(newValues)
   const insertQuery = {
-    // findRowByField can actually be multiple comma-separated values here
-    text: `INSERT INTO ${tableName}(${fieldNames}) VALUES(${fieldCounters})${options.findRowByField ? ` RETURNING ${options.findRowByField}` : ''};`,
+    text: `INSERT INTO ${tableName} (${fieldNames}) VALUES (${fieldCounters}) RETURNING *;`,
     values: Object.values(newValues)
   }
   if (options && options.debug) console.log(insertQuery)
   try {
     // Create a new row
     const insertResults = await pool.query(insertQuery)
-    // Current limitation: Can only find the new row if 1 findRowByField - if multiple: process 'rows' manually.
-    if (options.findRowByField && !options.findRowByField.includes(',')) {
-      // Find the newly created row
-      const newRowId = insertResults.rows[0][options.findRowByField]
-      const searchQuery = `SELECT * FROM ${tableName} WHERE ${options.findRowByField}=($1);`
-      if (options && options.debug) console.log(searchQuery)
-      const { rows } = await pool.query(searchQuery, [newRowId])
-      // Add id to row
-      const completeRow = Object.assign({}, rows && rows[0], insertResults.rows && insertResults.rows[0])
-      resolve(completeRow)
-    } else {
-      resolve(insertResults)
-    }
+    resolve(insertResults.rows && insertResults.rows[0])
   } catch (err) {
     reject(err)
   }
