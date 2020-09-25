@@ -54,8 +54,9 @@ const sqlFind = async (pool, tableName, query, options = {}) => {
     : ''
   const whereClause = query ? queryObjectToWhereClause(query, options) : ''
   const orderClause = (query && query.sort) ? queryObjectToOrderClause(query) : ''
+  const limitClause = (query && query.limit) ? `LIMIT ${query.limit}` : ''
   // Put it all together
-  const sqlString = `SELECT * FROM ${tableName} ${joinClause} ${whereClause} ${orderClause};`.replace(/ {2}/g, ' ')
+  const sqlString = `SELECT * FROM ${tableName} ${joinClause} ${whereClause} ${orderClause} ${limitClause}`.trim() + ';'
   if (options && options.debug) console.log(sqlString)
   const { rows } = await pool.query(sqlString)
   return rows

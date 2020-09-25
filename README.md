@@ -2,6 +2,7 @@
 
 Library that helps generate SQL queries and Express REST routes.
 
+
 ## SQL helpers functions
 
 	const { sql: { sqlFind, sqlCreate, sqlFindOrCreate, sqlUpdate, sqlDelete, sqlPopulate } } = require('sql-wizard')
@@ -9,6 +10,25 @@ Library that helps generate SQL queries and Express REST routes.
 ### Find/search
 
 	const people = await sqlFind(pool, 'person', { id: person.id, sort: 'name' })
+
+Greater/less than:
+
+	await sqlFind(pool, 'person', { age: '>25' })
+
+Wildcard text search:
+
+	// You can replace `contains` with `startsWith` or `endsWith`
+	await sqlFind(pool, 'person', { name: 'Sam' }, { contains: true })
+
+Sort and limit:
+
+	await sqlFind(pool, 'person', { sort: 'name' })
+	await sqlFind(pool, 'person', { limit: 100 })
+
+Single and double joins:
+
+	await sqlFind(pool, 'company', { join: 'person' })
+	await sqlFind(pool, 'company', { join: ['company_person', 'person'] })
 
 ### (Find or) Create
 
@@ -26,6 +46,12 @@ Library that helps generate SQL queries and Express REST routes.
 ### Populate (add related data)
 
 	await sqlPopulate(pool, company, 'people', 'company', 'person') --> company.people = [person1, person2...]
+
+### Options
+
+Use `debug: true` to print SQL string:
+
+	await sqlUpdate(pool, 'person', { id: 5 }, { name: 'Charlie' }, { debug: true })
 
 
 ## Creating REST routes with Express
