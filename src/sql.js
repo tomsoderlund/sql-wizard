@@ -15,7 +15,7 @@ const wrapIfString = value => isNaN(value) ? `'${value}'` : value
 const queryObjectToWhereClause = (queryObject, options = { startsWith: false, endsWith: false, contains: false }) => Object.keys(queryObject).reduce(
   (result, key) => {
     // Special keys
-    if (['limit', 'sort', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
+    if (['limit', 'sort', 'join', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
     // Options
     const copyOptions = ['startsWith', 'endsWith', 'contains']
     for (let o in copyOptions) {
@@ -47,9 +47,15 @@ const queryObjectToOrderClause = (queryObject, defaultValue) => `ORDER BY ${quer
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
 const sqlFind = async (pool, tableName, query, options = {}) => {
+  const joinClause = (query && query.join)
+    ? typeof query.join === 'string'
+      ? `LEFT JOIN ${query.join} ON (${query.join}.${tableName}_id = ${tableName}.id)`
+      : `LEFT JOIN ${query.join[0]} ON (${query.join[0]}.${tableName}_id = ${tableName}.id) LEFT JOIN ${query.join[1]} ON (${query.join[1]}.id = ${query.join[0]}.${query.join[1]}_id)`
+    : ''
   const whereClause = query ? queryObjectToWhereClause(query, options) : ''
   const orderClause = (query && query.sort) ? queryObjectToOrderClause(query) : ''
-  const sqlString = `SELECT * FROM ${tableName} ${whereClause} ${orderClause};`
+  // Put it all together
+  const sqlString = `SELECT * FROM ${tableName} ${joinClause} ${whereClause} ${orderClause};`.replace(/ {2}/g, ' ')
   if (options && options.debug) console.log(sqlString)
   const { rows } = await pool.query(sqlString)
   return rows

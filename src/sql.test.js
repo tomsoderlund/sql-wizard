@@ -53,13 +53,33 @@ describe('sql.js', function () {
     )
   })
 
+  it('should sqlFind with a single join', async function () {
+    const pool = jasmine.createSpyObj('pool', ['query'])
+    pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
+    expect(
+      await sqlFind(pool, 'company', { join: 'people' })
+    ).toEqual(
+      'SELECT * FROM company LEFT JOIN people ON (people.company_id = company.id) ;'
+    )
+  })
+
+  it('should sqlFind with a double join', async function () {
+    const pool = jasmine.createSpyObj('pool', ['query'])
+    pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
+    expect(
+      await sqlFind(pool, 'company', { join: ['company_people', 'people'] })
+    ).toEqual(
+      'SELECT * FROM company LEFT JOIN company_people ON (company_people.company_id = company.id) LEFT JOIN people ON (people.id = company_people.people_id) ;'
+    )
+  })
+
   it('should sqlUpdate to update', async function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
       await sqlUpdate(pool, 'person', { id: 5 }, { name: 'Charlie' }, { debug: true })
     ).toEqual(
-      ''
+      { rows: { text: 'UPDATE person SET name = ($1) WHERE id=5;', values: [ 'Charlie' ] } }
     )
   })
 
@@ -69,7 +89,7 @@ describe('sql.js', function () {
     expect(
       await sqlDelete(pool, 'people', { person_id: 5, company_id: 12 }, { debug: true })
     ).toEqual(
-      ''
+      { person_id: 5, company_id: 12 }
     )
   })
 })
