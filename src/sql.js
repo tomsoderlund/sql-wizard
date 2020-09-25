@@ -15,7 +15,7 @@ const wrapIfString = value => isNaN(value) ? `'${value}'` : value
 const queryObjectToWhereClause = (queryObject, options = { startsWith: false, endsWith: false, contains: false }) => Object.keys(queryObject).reduce(
   (result, key) => {
     // Special keys
-    if (['limit', 'sort', 'join', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
+    if (['limit', 'sort', 'group', 'join', 'fields', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
     // Options
     const copyOptions = ['startsWith', 'endsWith', 'contains']
     for (let o in copyOptions) {
@@ -46,17 +46,19 @@ const queryObjectToOrderClause = (queryObject, defaultValue) => `ORDER BY ${quer
 // ----- SQL functions -----
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
-const sqlFind = async (pool, tableName, query, options = {}) => {
-  const joinClause = (query && query.join)
+const sqlFind = async (pool, tableName, query = {}, options = {}) => {
+  const fields = query.fields ? query.fields.join(', ') : '*'
+  const joinClause = query.join
     ? typeof query.join === 'string'
       ? `LEFT JOIN ${query.join} ON (${query.join}.${tableName}_id = ${tableName}.id)`
       : `LEFT JOIN ${query.join[0]} ON (${query.join[0]}.${tableName}_id = ${tableName}.id) LEFT JOIN ${query.join[1]} ON (${query.join[1]}.id = ${query.join[0]}.${query.join[1]}_id)`
     : ''
   const whereClause = query ? queryObjectToWhereClause(query, options) : ''
-  const orderClause = (query && query.sort) ? queryObjectToOrderClause(query) : ''
-  const limitClause = (query && query.limit) ? `LIMIT ${query.limit}` : ''
+  const groupByClause = query.group ? `GROUP BY ${query.group}` : ''
+  const orderClause = query.sort ? queryObjectToOrderClause(query) : ''
+  const limitClause = query.limit ? `LIMIT ${query.limit}` : ''
   // Put it all together
-  const sqlString = `SELECT * FROM ${tableName} ${joinClause} ${whereClause} ${orderClause} ${limitClause}`.trim() + ';'
+  const sqlString = `SELECT ${fields} FROM ${tableName} ${joinClause} ${whereClause} ${groupByClause} ${orderClause} ${limitClause}`.replace(/ {2}/g, ' ').trim() + ';'
   if (options && options.debug) console.log(sqlString)
   const { rows } = await pool.query(sqlString)
   return rows

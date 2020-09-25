@@ -49,7 +49,7 @@ describe('sql.js', function () {
     expect(
       await sqlFind(pool, 'people', { age: '>25' })
     ).toEqual(
-      'SELECT * FROM people  WHERE age > 25;'
+      'SELECT * FROM people WHERE age > 25;'
     )
   })
 
@@ -59,7 +59,7 @@ describe('sql.js', function () {
     expect(
       await sqlFind(pool, 'people', { name: 'Sam' }, { contains: true })
     ).toEqual(
-      'SELECT * FROM people  WHERE name ILIKE \'%Sam%\';'
+      'SELECT * FROM people WHERE name ILIKE \'%Sam%\';'
     )
   })
 
@@ -69,7 +69,7 @@ describe('sql.js', function () {
     expect(
       await sqlFind(pool, 'people', { id: 5, sort: 'name' })
     ).toEqual(
-      'SELECT * FROM people  WHERE id=5 ORDER BY name NULLS LAST;'
+      'SELECT * FROM people WHERE id=5 ORDER BY name NULLS LAST;'
     )
   })
 
@@ -79,7 +79,7 @@ describe('sql.js', function () {
     expect(
       await sqlFind(pool, 'people', { limit: 100 })
     ).toEqual(
-      'SELECT * FROM people    LIMIT 100;'
+      'SELECT * FROM people   LIMIT 100;'
     )
   })
 
@@ -100,6 +100,16 @@ describe('sql.js', function () {
       await sqlFind(pool, 'company', { join: ['company_people', 'people'] })
     ).toEqual(
       'SELECT * FROM company LEFT JOIN company_people ON (company_people.company_id = company.id) LEFT JOIN people ON (people.id = company_people.people_id);'
+    )
+  })
+
+  it('should sqlFind with a single join and custom fields', async function () {
+    const pool = jasmine.createSpyObj('pool', ['query'])
+    pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
+    expect(
+      await sqlFind(pool, 'company', { join: 'people', fields: ['company.name', 'count(people.id)'], group: 'company.name' })
+    ).toEqual(
+      'SELECT company.name, count(people.id) FROM company LEFT JOIN people ON (people.company_id = company.id) GROUP BY company.name;'
     )
   })
 

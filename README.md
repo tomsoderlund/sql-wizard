@@ -30,6 +30,10 @@ Single and double joins:
 	await sqlFind(pool, 'company', { join: 'person' })
 	await sqlFind(pool, 'company', { join: ['company_person', 'person'] })
 
+Custom fields and `GROUP BY`:
+
+	await sqlFind(pool, 'company', { join: 'person', fields: ['company.name', 'count(person.id)'], group: 'company.name' })
+
 ### (Find or) Create
 
 	const person = await sqlCreate(pool, 'person', { person values... })
