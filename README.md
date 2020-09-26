@@ -21,7 +21,7 @@ Do an `OR` search (match _any_, instead of _all_):
 
 Greater/less than:
 
-	await sqlFind(pool, 'person', { age: '>25' })
+	await sqlFind(pool, 'person', { date_published: '>2020-09-25' })
 
 Wildcard text search:
 
