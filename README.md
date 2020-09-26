@@ -7,6 +7,8 @@ Library that helps generate SQL queries and Express REST routes. _Zero dependenc
 
 	const { sql: { sqlFind, sqlCreate, sqlFindOrCreate, sqlUpdate, sqlDelete, sqlPopulate } } = require('sql-wizard')
 
+These functions are primarily designed for the `pg` Postgres library. `pool.query` is a function that takes an SQL string as first argument.
+
 ### Find/search
 
 	const people = await sqlFind(pool, 'person', { id: person.id }, { sort: 'name' })
