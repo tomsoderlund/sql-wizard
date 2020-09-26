@@ -10,22 +10,30 @@ const { nullAllEmptyFields } = require('./helpers')
 
 // ----- Helpers -----
 
+const OPTION_KEYS = ['limit', 'sort', 'group', 'join', 'fields', 'any', 'startsWith', 'endsWith', 'contains']
+
 const wrapIfString = value => isNaN(value) ? `'${value}'` : value
 
+const includesSome = (collection1, collection2) => collection2.filter(childObj => collection1.includes(childObj))
+
 const queryObjectToWhereClause = (queryObject, options = { startsWith: false, endsWith: false, contains: false }) => {
-  // Options
-  const copyOptions = ['startsWith', 'endsWith', 'contains']
-  for (let o in copyOptions) {
-    if (queryObject[copyOptions[o]]) options[copyOptions[o]] = true
+  // Check if options in search query
+  const optionsInQuery = includesSome(Object.keys(queryObject), OPTION_KEYS)
+  if (optionsInQuery.length) {
+    console.warn(`[sql-wizard] Warning: Place these in 'options' parameter instead of 'query': ${optionsInQuery}`)
+    for (const optionKey of OPTION_KEYS) {
+      if (queryObject[optionKey]) options[optionKey] = true
+    }
   }
+  // Loop through all search query keys
   return Object.keys(queryObject).reduce(
     (result, key) => {
-      // Special keys
-      if (['limit', 'sort', 'group', 'join', 'fields', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
+      // 'key' is an option (legacy), not a search query
+      if (OPTION_KEYS.includes(key)) return result
+      const combiner = options.any ? ' OR ' : ' AND '
       // Normal value
       const value = queryObject[key]
       const valueFirstChar = value ? value[0] : undefined
-      const combiner = queryObject.any ? ' OR ' : ' AND '
       const operatorAndValue = isNaN(value)
         ? (valueFirstChar === '<' || valueFirstChar === '>') // e.g. { age: '<42' }
           ? { operator: ` ${valueFirstChar} `, value: wrapIfString(value.slice(1)) }
@@ -43,22 +51,22 @@ const queryObjectToWhereClause = (queryObject, options = { startsWith: false, en
   )
 }
 
-const queryObjectToOrderClause = (queryObject, defaultValue) => `ORDER BY ${queryObject.sort || defaultValue} NULLS LAST`
+const queryObjectToOrderClause = (queryObject, options, { defaultValue = '' } = {}) => `ORDER BY ${options.sort || defaultValue} NULLS LAST`
 
 // ----- SQL functions -----
 
 // const [person] = await sqlFind(pool, 'person', { id: person.id })
 const sqlFind = async (pool, tableName, query = {}, options = {}) => {
-  const fields = query.fields ? query.fields.join(', ') : '*'
-  const joinClause = query.join
-    ? typeof query.join === 'string'
-      ? `LEFT JOIN ${query.join} ON (${query.join}.${tableName}_id = ${tableName}.id)`
-      : `LEFT JOIN ${query.join[0]} ON (${query.join[0]}.${tableName}_id = ${tableName}.id) LEFT JOIN ${query.join[1]} ON (${query.join[1]}.id = ${query.join[0]}.${query.join[1]}_id)`
+  const fields = options.fields ? options.fields.join(', ') : '*'
+  const joinClause = options.join
+    ? typeof options.join === 'string'
+      ? `LEFT JOIN ${options.join} ON (${options.join}.${tableName}_id = ${tableName}.id)`
+      : `LEFT JOIN ${options.join[0]} ON (${options.join[0]}.${tableName}_id = ${tableName}.id) LEFT JOIN ${options.join[1]} ON (${options.join[1]}.id = ${options.join[0]}.${options.join[1]}_id)`
     : ''
-  const whereClause = query ? queryObjectToWhereClause(query, options) : ''
-  const groupByClause = query.group ? `GROUP BY ${query.group}` : ''
-  const orderClause = query.sort ? queryObjectToOrderClause(query) : ''
-  const limitClause = query.limit ? `LIMIT ${query.limit}` : ''
+  const whereClause = queryObjectToWhereClause(query, options)
+  const groupByClause = options.group ? `GROUP BY ${options.group}` : ''
+  const orderClause = options.sort ? queryObjectToOrderClause(query, options) : ''
+  const limitClause = options.limit ? `LIMIT ${options.limit}` : ''
   // Put it all together
   const sqlString = `SELECT ${fields} FROM ${tableName} ${joinClause} ${whereClause} ${groupByClause} ${orderClause} ${limitClause}`.replace(/ {2}/g, ' ').trim() + ';'
   if (options && options.debug) console.log(sqlString)

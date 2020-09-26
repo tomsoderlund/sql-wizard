@@ -9,7 +9,13 @@ Library that helps generate SQL queries and Express REST routes. _Zero dependenc
 
 ### Find/search
 
-	const people = await sqlFind(pool, 'person', { id: person.id, sort: 'name' })
+	const people = await sqlFind(pool, 'person', { id: person.id }, { sort: 'name' })
+
+> **Note:** from version 1.5.0, you should place these in `options` instead of `query`: `limit`, `sort`, `group`, `join`, `fields`, `any`, `startsWith`, `endsWith`, `contains`
+
+Do an `OR` search (match _any_, instead of _all_):
+
+	await sqlFind(pool, 'person', { name: 'Tom', email: 'Tom' }, { any: true })
 
 Greater/less than:
 
@@ -22,17 +28,17 @@ Wildcard text search:
 
 Sort and limit:
 
-	await sqlFind(pool, 'person', { sort: 'name' })
-	await sqlFind(pool, 'person', { limit: 100 })
+	await sqlFind(pool, 'person', undefined, { sort: 'name' })
+	await sqlFind(pool, 'person', undefined, { limit: 100 })
 
 Single and double joins:
 
-	await sqlFind(pool, 'company', { join: 'person' })
-	await sqlFind(pool, 'company', { join: ['company_person', 'person'] })
+	await sqlFind(pool, 'company', undefined, { join: 'person' })
+	await sqlFind(pool, 'company', undefined, { join: ['company_person', 'person'] })
 
 Custom fields and `GROUP BY`:
 
-	await sqlFind(pool, 'company', { join: 'person', fields: ['company.name', 'count(person.id)'], group: 'company.name' })
+	await sqlFind(pool, 'company', undefined, { join: 'person', fields: ['company.name', 'count(person.id)'], group: 'company.name' })
 
 ### (Find or) Create
 

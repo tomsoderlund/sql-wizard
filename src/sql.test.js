@@ -3,7 +3,7 @@ const { queryObjectToWhereClause, sqlFind, sqlUpdate, sqlDelete } = require('./s
 describe('sql.js helpers', function () {
   it('should queryObjectToWhereClause with AND', async function () {
     expect(
-      queryObjectToWhereClause({ name: 'Tom', email: 'Tom', limit: 1000 })
+      queryObjectToWhereClause({ name: 'Tom', email: 'Tom' }, { limit: 1000 })
     ).toEqual(
       `WHERE name ILIKE 'Tom' AND email ILIKE 'Tom'`
     )
@@ -11,7 +11,7 @@ describe('sql.js helpers', function () {
 
   it('should queryObjectToWhereClause with startsWith and AND', async function () {
     expect(
-      queryObjectToWhereClause({ startsWith: true, name: 'Tom', email: 'Tom', limit: 1000 })
+      queryObjectToWhereClause({ name: 'Tom', email: 'Tom' }, { startsWith: true, limit: 1000 })
     ).toEqual(
       `WHERE name ILIKE 'Tom%' AND email ILIKE 'Tom%'`
     )
@@ -19,7 +19,7 @@ describe('sql.js helpers', function () {
 
   it('should queryObjectToWhereClause with startsWith and OR', async function () {
     expect(
-      queryObjectToWhereClause({ startsWith: true, name: 'Tom', email: 'Tom', any: true, limit: 1000 })
+      queryObjectToWhereClause({ name: 'Tom', email: 'Tom' }, { any: true, startsWith: true, limit: 1000 })
     ).toEqual(
       `WHERE name ILIKE 'Tom%' OR email ILIKE 'Tom%'`
     )
@@ -27,7 +27,7 @@ describe('sql.js helpers', function () {
 
   it('should queryObjectToWhereClause with contains', async function () {
     expect(
-      queryObjectToWhereClause({ contains: true, name: 'Tom' })
+      queryObjectToWhereClause({ name: 'Tom' }, { contains: true })
     ).toEqual(
       `WHERE name ILIKE '%Tom%'`
     )
@@ -63,7 +63,7 @@ describe('sql.js', function () {
     )
   })
 
-  it('should sqlFind with `contains` in query', async function () {
+  it('should sqlFind with `contains` in query (legacy)', async function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
@@ -77,7 +77,7 @@ describe('sql.js', function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
-      await sqlFind(pool, 'person', { id: 5, sort: 'name' })
+      await sqlFind(pool, 'person', { id: 5 }, { sort: 'name' })
     ).toEqual(
       'SELECT * FROM person WHERE id=5 ORDER BY name NULLS LAST;'
     )
@@ -87,7 +87,7 @@ describe('sql.js', function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
-      await sqlFind(pool, 'person', { limit: 100 })
+      await sqlFind(pool, 'person', undefined, { limit: 100 })
     ).toEqual(
       'SELECT * FROM person   LIMIT 100;'
     )
@@ -97,7 +97,7 @@ describe('sql.js', function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
-      await sqlFind(pool, 'company', { join: 'person' })
+      await sqlFind(pool, 'company', {}, { join: 'person' })
     ).toEqual(
       'SELECT * FROM company LEFT JOIN person ON (person.company_id = company.id);'
     )
@@ -107,7 +107,7 @@ describe('sql.js', function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
-      await sqlFind(pool, 'company', { join: ['company_person', 'person'] })
+      await sqlFind(pool, 'company', {}, { join: ['company_person', 'person'] })
     ).toEqual(
       'SELECT * FROM company LEFT JOIN company_person ON (company_person.company_id = company.id) LEFT JOIN person ON (person.id = company_person.person_id);'
     )
@@ -117,7 +117,7 @@ describe('sql.js', function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
-      await sqlFind(pool, 'company', { join: 'person', fields: ['company.name', 'count(person.id)'], group: 'company.name' })
+      await sqlFind(pool, 'company', undefined, { join: 'person', fields: ['company.name', 'count(person.id)'], group: 'company.name' })
     ).toEqual(
       'SELECT company.name, count(person.id) FROM company LEFT JOIN person ON (person.company_id = company.id) GROUP BY company.name;'
     )
