@@ -12,34 +12,36 @@ const { nullAllEmptyFields } = require('./helpers')
 
 const wrapIfString = value => isNaN(value) ? `'${value}'` : value
 
-const queryObjectToWhereClause = (queryObject, options = { startsWith: false, endsWith: false, contains: false }) => Object.keys(queryObject).reduce(
-  (result, key) => {
-    // Special keys
-    if (['limit', 'sort', 'group', 'join', 'fields', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
-    // Options
-    const copyOptions = ['startsWith', 'endsWith', 'contains']
-    for (let o in copyOptions) {
-      if (queryObject[copyOptions[o]]) options[copyOptions[o]] = true
-    }
-    // Normal value
-    const value = queryObject[key]
-    const valueFirstChar = value ? value[0] : undefined
-    const combiner = queryObject.any ? ' OR ' : ' AND '
-    const operatorAndValue = isNaN(value)
-      ? (valueFirstChar === '<' || valueFirstChar === '>') // e.g. { age: '<42' }
-        ? { operator: ` ${valueFirstChar} `, value: wrapIfString(value.slice(1)) }
-        : value.toLowerCase() === 'null' // e.g. { age: 'null' }
-          ? { operator: ' IS ', value: 'NULL' }
-          : value.toLowerCase() === '!null' // e.g. { age: '!null' }
-            ? { operator: ' IS NOT ', value: 'NULL' }
-            : { operator: ' ILIKE ', value: `'${options.endsWith || options.contains ? '%' : ''}${value}${options.startsWith || options.contains ? '%' : ''}'` } // e.g. { name: 'Tom' }
-      : { operator: '=', value } // is a number, e.g. { age: 42 }
-    return result + (value !== undefined && value !== ''
-      ? (result.length ? combiner : 'WHERE ') + key + operatorAndValue.operator + operatorAndValue.value
-      : '')
-  },
-  ''
-)
+const queryObjectToWhereClause = (queryObject, options = { startsWith: false, endsWith: false, contains: false }) => {
+  // Options
+  const copyOptions = ['startsWith', 'endsWith', 'contains']
+  for (let o in copyOptions) {
+    if (queryObject[copyOptions[o]]) options[copyOptions[o]] = true
+  }
+  return Object.keys(queryObject).reduce(
+    (result, key) => {
+      // Special keys
+      if (['limit', 'sort', 'group', 'join', 'fields', 'any', 'startsWith', 'endsWith', 'contains'].includes(key)) return result
+      // Normal value
+      const value = queryObject[key]
+      const valueFirstChar = value ? value[0] : undefined
+      const combiner = queryObject.any ? ' OR ' : ' AND '
+      const operatorAndValue = isNaN(value)
+        ? (valueFirstChar === '<' || valueFirstChar === '>') // e.g. { age: '<42' }
+          ? { operator: ` ${valueFirstChar} `, value: wrapIfString(value.slice(1)) }
+          : value.toLowerCase() === 'null' // e.g. { age: 'null' }
+            ? { operator: ' IS ', value: 'NULL' }
+            : value.toLowerCase() === '!null' // e.g. { age: '!null' }
+              ? { operator: ' IS NOT ', value: 'NULL' }
+              : { operator: ' ILIKE ', value: `'${options.endsWith || options.contains ? '%' : ''}${value}${options.startsWith || options.contains ? '%' : ''}'` } // e.g. { name: 'Tom' }
+        : { operator: '=', value } // is a number, e.g. { age: 42 }
+      return result + (value !== undefined && value !== ''
+        ? (result.length ? combiner : 'WHERE ') + key + operatorAndValue.operator + operatorAndValue.value
+        : '')
+    },
+    ''
+  )
+}
 
 const queryObjectToOrderClause = (queryObject, defaultValue) => `ORDER BY ${queryObject.sort || defaultValue} NULLS LAST`
 

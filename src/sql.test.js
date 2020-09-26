@@ -53,11 +53,21 @@ describe('sql.js', function () {
     )
   })
 
-  it('should sqlFind with `contains`', async function () {
+  it('should sqlFind with `contains` in options', async function () {
     const pool = jasmine.createSpyObj('pool', ['query'])
     pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
     expect(
       await sqlFind(pool, 'person', { name: 'Sam' }, { contains: true })
+    ).toEqual(
+      'SELECT * FROM person WHERE name ILIKE \'%Sam%\';'
+    )
+  })
+
+  it('should sqlFind with `contains` in query', async function () {
+    const pool = jasmine.createSpyObj('pool', ['query'])
+    pool.query.and.callFake((pool, tableName, query, options) => ({ rows: pool }))
+    expect(
+      await sqlFind(pool, 'person', { name: 'Sam', contains: true })
     ).toEqual(
       'SELECT * FROM person WHERE name ILIKE \'%Sam%\';'
     )
