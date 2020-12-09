@@ -1,4 +1,4 @@
-const { queryObjectToWhereClause, sqlFind, sqlUpdate, sqlDelete } = require('./sql')
+const { queryObjectToWhereClause, queryObjectToOrderClause, sqlFind, sqlUpdate, sqlDelete } = require('./sql')
 
 describe('sql.js helpers', function () {
   it('should queryObjectToWhereClause with AND', async function () {
@@ -38,6 +38,22 @@ describe('sql.js helpers', function () {
       queryObjectToWhereClause({ start_date: '>2019-01-01' })
     ).toEqual(
       `WHERE start_date > '2019-01-01'`
+    )
+  })
+
+  it('should queryObjectToOrderClause with date_created', async function () {
+    expect(
+      queryObjectToOrderClause({}, { sort: 'date_created' })
+    ).toEqual(
+      `ORDER BY date_created NULLS LAST`
+    )
+  })
+
+  it('should queryObjectToOrderClause old parameters', async function () {
+    expect(
+      queryObjectToOrderClause({}, 'name')
+    ).toEqual(
+      'ORDER BY name NULLS LAST'
     )
   })
 })

@@ -1,6 +1,6 @@
 # SQL Wizard
 
-Library that helps generate SQL queries and Express REST routes. _Zero dependencies._
+Library that helps generate SQL queries and Express REST routes.
 
 
 ## SQL helpers functions

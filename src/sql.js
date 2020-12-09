@@ -51,7 +51,15 @@ const queryObjectToWhereClause = (queryObject, options = { startsWith: false, en
   )
 }
 
-const queryObjectToOrderClause = (queryObject, options, { defaultValue = '' } = {}) => `ORDER BY ${options.sort || defaultValue} NULLS LAST`
+const queryObjectToOrderClause = (queryObject, options = {}, orderOptions = {}) => {
+  if (typeof options === 'string') {
+    console.warn('[sql-wizard] Warning: new syntax is queryObjectToOrderClause(queryObject, { sort: \'sortField\' }, { defaultValue })')
+    const orderValue = queryObject.sort || options
+    return orderValue ? `ORDER BY ${orderValue} NULLS LAST` : ''
+  }
+  const orderValue = options.sort || orderOptions.defaultValue
+  return orderValue ? `ORDER BY ${orderValue} NULLS LAST` : ''
+}
 
 // ----- SQL functions -----
 
