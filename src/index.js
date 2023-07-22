@@ -1,4 +1,5 @@
 module.exports = {
   sql: require('./sql'),
-  routes: require('./routes')
+  routes: require('./routes'),
+  createSqlRestRoutesServerless: require('./createSqlRestRoutesServerless')
 }

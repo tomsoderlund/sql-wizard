@@ -66,7 +66,17 @@ Use `debug: true` to print SQL string:
 	await sqlUpdate(pool, 'person', { id: 5 }, { name: 'Charlie' }, { debug: true })
 
 
-## Creating REST routes with Express
+## Creating REST routes serverless (e.g. for Next.js and Vercel)
+
+	// File: /pages/api/articles/index.js
+	import { createSqlRestRoutesServerless } from 'sql-wizard'
+
+	const { config: { connectionString, allowedDomainsList } } = require('config/config')
+	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', { beforeGet, afterCreate }, { connectionString, allowedDomainsList })
+	export default articleRoutes
+
+
+## Creating REST routes with a server (Express)
 
 In `server.js`:
 
@@ -88,8 +98,8 @@ In e.g. `routes/kittens.js`:
 
 ### Custom REST handlers
 
-* `list(pool, tableName, options, customHandlers, req)`, `beforeList(pool, req.body)`, `afterList(pool, result)`, `listFilter(req)`, `listSort(req)`
-* `get(pool, tableName, options, customHandlers, req)`, `beforeGet(pool, req.body)`, `afterGet(pool, result)`
-* `create(pool, tableName, options, customHandlers, req)`, `beforeCreate(pool, req.body)`, `afterCreate(pool, result)`
-* `update(pool, tableName, options, customHandlers, req)`, `beforeUpdate(pool, req.body)`, `afterUpdate(pool, result)`
-* `delete(pool, tableName, options, customHandlers, req)`, `beforeDelete(pool, req.body)`, `afterDelete(pool, result)`
+- `list(pool, tableName, options, customHandlers, req)`, `beforeList(pool, req.body)`, `afterList(pool, result)`, `listFilter(req)`, `listSort(req)`
+- `get(pool, tableName, options, customHandlers, req)`, `beforeGet(pool, req.body)`, `afterGet(pool, result)`
+- `create(pool, tableName, options, customHandlers, req)`, `beforeCreate(pool, req.body)`, `afterCreate(pool, result)`
+- `update(pool, tableName, options, customHandlers, req)`, `beforeUpdate(pool, req.body)`, `afterUpdate(pool, result)`
+- `delete(pool, tableName, options, customHandlers, req)`, `beforeDelete(pool, req.body)`, `afterDelete(pool, result)`
