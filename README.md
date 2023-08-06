@@ -68,10 +68,19 @@ Use `debug: true` to print SQL string:
 
 ## Creating REST routes serverless (e.g. for Next.js and Vercel)
 
-	// File: /pages/api/articles/index.js
-	import { createSqlRestRoutesServerless } from 'sql-wizard'
+Set up a folder structure in `/pages/api` with a file (or folder) for each endpoint, e.g:
 
+- 📁 `/pages/api`
+	- 📄 `articles.js`
+	- 📄 `users.js`
+
+Then, for each endpoint, you need to use `createSqlRestRoutesServerless` like in this example endpoint for `articles`:
+
+`/pages/api/articles.js`:
+
+	import { createSqlRestRoutesServerless } from 'sql-wizard'
 	const { config: { connectionString, allowedDomainsList } } = require('config/config')
+
 	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', { beforeGet, afterCreate }, { connectionString, allowedDomainsList })
 	export default articleRoutes
 
