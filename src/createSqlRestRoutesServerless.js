@@ -3,7 +3,7 @@ const { sqlFind, sqlCreate, sqlUpdate, sqlDelete } = require('./sql')
 
 const { handleRestRequest, CustomError } = require('./handleRestRequest')
 
-// const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', {}, { connectionString, allowedDomainsList })
+// const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', {}, { connectionString, allowedHostsList })
 module.exports = function createSqlRestRoutesServerless (tableName, customHandlers = {}, options = {}, req, res) {
   const getResponseForAction = (actionName, actionFunctionName) => {
     const currentActionFunctionName = actionFunctionName || actionName
@@ -15,7 +15,7 @@ module.exports = function createSqlRestRoutesServerless (tableName, customHandle
     )
   }
 
-  if (options.allowedDomainsList !== undefined && !options.allowedDomainsList.includes(req.headers.host)) throw new CustomError('Request not authorized', 401, { host: req.headers.host })
+  if (options.allowedHostsList !== undefined && !options.allowedHostsList.includes(req.headers.host)) throw new CustomError('Request not authorized', 401, { host: req.headers.host })
 
   return handleRestRequest(async (req, res) => {
     switch (req.method) {

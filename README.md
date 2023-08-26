@@ -85,9 +85,11 @@ Then, for each endpoint, you need to use `createSqlRestRoutesServerless` like in
 `/pages/api/articles.js`:
 
 	import { createSqlRestRoutesServerless } from 'sql-wizard'
-	const { config: { connectionString, allowedDomainsList } } = require('config/config')
 
-	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', undefined, { connectionString, allowedDomainsList })
+	const connectionString = process.env.DATABASE_URL
+	const allowedHostsList = ['localhost:3000', 'www.myapp.com']
+
+	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', undefined, { connectionString, allowedHostsList })
 	export default articleRoutes
 
 And just like that, you have the following [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) actions working:
@@ -100,7 +102,7 @@ And just like that, you have the following [CRUD](https://en.wikipedia.org/wiki/
 
 ### `customHandlers` parameter:
 
-	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', { beforeGet, afterCreate }, { connectionString, allowedDomainsList })
+	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', { beforeGet, afterCreate }, { connectionString, allowedHostsList })
 
 Allowed methods:
 
