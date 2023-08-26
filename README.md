@@ -68,7 +68,9 @@ Use `debug: true` to print SQL string:
 
 ## Creating REST routes serverless (e.g. for Next.js and Vercel)
 
-Set up a folder structure in `/pages/api` with a file (or folder) for each endpoint, e.g:
+This is a great way of using a Postgres database (you can get a free database from [ElephantSQL](https://www.elephantsql.com/?ref=tomsoderlund)) in a serverless way.
+
+Next.js example: set up a folder structure in `/pages/api` with a file (or folder) for each endpoint, e.g:
 
 - 📁 `/pages/api`
 	- 📁 `articles`
