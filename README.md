@@ -71,8 +71,12 @@ Use `debug: true` to print SQL string:
 Set up a folder structure in `/pages/api` with a file (or folder) for each endpoint, e.g:
 
 - 📁 `/pages/api`
-	- 📄 `articles.js`
-	- 📄 `users.js`
+	- 📁 `articles`
+		- 📄 `index.js`
+		- 📄 `[id].js`
+	- 📁 `users`
+		- 📄 `index.js`
+		- 📄 `[id].js`
 
 Then, for each endpoint, you need to use `createSqlRestRoutesServerless` like in this example endpoint for `articles`:
 
@@ -81,9 +85,28 @@ Then, for each endpoint, you need to use `createSqlRestRoutesServerless` like in
 	import { createSqlRestRoutesServerless } from 'sql-wizard'
 	const { config: { connectionString, allowedDomainsList } } = require('config/config')
 
-	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', { beforeGet, afterCreate }, { connectionString, allowedDomainsList })
+	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', undefined, { connectionString, allowedDomainsList })
 	export default articleRoutes
 
+And just like that, you have the following [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) actions working:
+
+- `GET /api/articles`: list rows (see also `listFilter`/`listSort` below)
+- `GET /api/articles/[id]` (or `GET /api/articles?id=[id]`): get one row
+- `POST /api/articles`: create new row
+- `PUT`/`PATCH /api/articles`: update row `{ id }`
+- `DELETE /api/articles`: delete row `{ id }`
+
+### `customHandlers` parameter:
+
+	const articleRoutes = createSqlRestRoutesServerless.bind(undefined, 'article', { beforeGet, afterCreate }, { connectionString, allowedDomainsList })
+
+Allowed methods:
+
+- `before[ActionName](pgClient, req.body) => newReqBody`
+- `after[ActionName](pgClient, resultJson) => newResultJson`
+- For list/`GET`:
+	- `listFilter(req) => WHERE string`
+	- `listSort(req) => ORDER BY string`
 
 ## Creating REST routes with a server (Express)
 
